@@ -75,10 +75,10 @@ yolo detect predict model=runs/detect/train/weights/best.pt source=path/to/image
 
 在 `imgsz=640` 下，本地模型构建结果如下：
 
-| 模型 | 层数 | 参数量 | GFLOPs |
-| --- | ---: | ---: | ---: |
-| YOLOv8n-P2-BiFPN | 161 | 3.35M | 17.4 |
-| YOLOv8s-P2-BiFPN | 161 | 10.88M | 39.7 |
+| 模型             | 层数 | 参数量 | GFLOPs |
+| ---------------- | ---: | -----: | -----: |
+| YOLOv8n-P2-BiFPN |  161 |  3.35M |   17.4 |
+| YOLOv8s-P2-BiFPN |  161 | 10.88M |   39.7 |
 
 ## 说明
 
