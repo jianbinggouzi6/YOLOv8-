@@ -28,6 +28,7 @@ from ultralytics.nn.modules import (
     A2C2f,
     AConv,
     ADown,
+    BiFPNConcat,
     Bottleneck,
     BottleneckCSP,
     C2f,
@@ -1918,7 +1919,7 @@ def parse_model(d, ch, verbose=True):
             c2 = args[1] if args[3] else args[1] * 4
         elif m is torch.nn.BatchNorm2d:
             args = [ch[f]]
-        elif m is Concat:
+        elif m in frozenset({Concat, BiFPNConcat}):
             c2 = sum(ch[x] for x in f)
         elif m in frozenset(
             {

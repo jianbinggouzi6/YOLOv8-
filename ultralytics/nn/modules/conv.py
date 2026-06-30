@@ -8,8 +8,10 @@ import math
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 __all__ = (
+    "BiFPNConcat",
     "CBAM",
     "ChannelAttention",
     "Concat",
@@ -639,6 +641,24 @@ class Concat(nn.Module):
             (torch.Tensor): Concatenated tensor.
         """
         return torch.cat(x, self.d)
+
+
+class BiFPNConcat(nn.Module):
+    """Weighted feature fusion followed by concatenation."""
+
+    def __init__(self, n=2, dimension=1):
+        """Initialize weighted concat with learnable normalized input weights."""
+        super().__init__()
+        self.n = n
+        self.d = dimension
+        self.w = nn.Parameter(torch.ones(n, dtype=torch.float32), requires_grad=True)
+        self.eps = 1e-4
+
+    def forward(self, x: list[torch.Tensor]):
+        """Apply normalized non-negative weights to inputs, then concatenate."""
+        w = F.relu(self.w)
+        w = w / (w.sum() + self.eps)
+        return torch.cat([w[i] * x[i] for i in range(len(x))], self.d)
 
 
 class Index(nn.Module):

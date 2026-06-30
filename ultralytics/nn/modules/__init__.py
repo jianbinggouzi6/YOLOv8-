@@ -61,6 +61,7 @@ from .block import (
     TorchVision,
 )
 from .conv import (
+    BiFPNConcat,
     CBAM,
     ChannelAttention,
     Concat,
@@ -109,6 +110,7 @@ from .transformer import (
 
 __all__ = (
     "AIFI",
+    "BiFPNConcat",
     "C1",
     "C2",
     "C2PSA",
