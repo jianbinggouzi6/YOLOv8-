@@ -11,8 +11,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 __all__ = (
-    "BiFPNConcat",
     "CBAM",
+    "BiFPNConcat",
     "ChannelAttention",
     "Concat",
     "Conv",
