@@ -35,6 +35,7 @@ __all__ = (
     "C2fAttn",
     "C2fCIB",
     "C2fPSA",
+    "C2fSPSA",
     "C3Ghost",
     "C3k2",
     "C3x",
@@ -51,6 +52,7 @@ __all__ = (
     "RepVGGDW",
     "ResNetLayer",
     "SCDown",
+    "SPSA",
     "TorchVision",
 )
 
@@ -317,6 +319,55 @@ class C2f(nn.Module):
         y = [y[0], y[1]]
         y.extend(m(y[-1]) for m in self.m)
         return self.cv2(torch.cat(y, 1))
+
+
+class SPSA(nn.Module):
+    """Sequential Polarized Self-Attention for spatial and channel feature enhancement."""
+
+    def __init__(self, c1: int, reduction: int = 2):
+        """Initialize SPSA with lightweight channel and spatial attention branches."""
+        super().__init__()
+        c_ = max(1, c1 // reduction)
+        self.channel_value = nn.Conv2d(c1, c_, 1, bias=False)
+        self.channel_query = nn.Conv2d(c1, 1, 1, bias=False)
+        self.channel_proj = nn.Conv2d(c_, c1, 1, bias=False)
+        self.spatial_value = nn.Conv2d(c1, c_, 1, bias=False)
+        self.spatial_query = nn.Conv2d(c1, c_, 1, bias=False)
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.spatial_softmax = nn.Softmax(dim=-1)
+        self.channel_softmax = nn.Softmax(dim=1)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Apply channel attention followed by spatial attention."""
+        b, _, h, w = x.shape
+
+        channel_value = self.channel_value(x).view(b, -1, h * w)
+        channel_query = self.spatial_softmax(self.channel_query(x).view(b, 1, h * w))
+        channel_weight = torch.bmm(channel_value, channel_query.transpose(1, 2)).view(b, -1, 1, 1)
+        x = x * self.sigmoid(self.channel_proj(channel_weight))
+
+        spatial_value = self.channel_softmax(self.avg_pool(self.spatial_value(x)).view(b, -1, 1))
+        spatial_query = self.spatial_query(x).view(b, -1, h * w)
+        spatial_weight = torch.bmm(spatial_value.transpose(1, 2), spatial_query).view(b, 1, h, w)
+        return x * self.sigmoid(spatial_weight)
+
+
+class C2fSPSA(C2f):
+    """C2f block enhanced with Sequential Polarized Self-Attention."""
+
+    def __init__(self, c1: int, c2: int, n: int = 1, shortcut: bool = False, g: int = 1, e: float = 0.5):
+        """Initialize C2fSPSA using the original C2f feature-fusion path plus SPSA recalibration."""
+        super().__init__(c1, c2, n, shortcut, g, e)
+        self.attn = SPSA(c2)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass through C2f followed by SPSA."""
+        return self.attn(super().forward(x))
+
+    def forward_split(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass using split() followed by SPSA."""
+        return self.attn(super().forward_split(x))
 
 
 class C3(nn.Module):

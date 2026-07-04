@@ -1,0 +1,51 @@
+# Ultralytics AGPL-3.0 License - https://ultralytics.com/license
+
+# YOLOv8 object detection model with RFCAConv and C2fSPSA modules.
+# It keeps the standard P3/8 - P5/32 detection outputs described by YOLOv8.
+# Model docs: https://docs.ultralytics.com/models/yolov8
+# Task docs: https://docs.ultralytics.com/tasks/detect
+
+# Parameters
+nc: 80 # number of classes
+iou_loss: GIoU # bounding-box regression loss used by the paper's third chapter
+scales: # model compound scaling constants, i.e. 'model=yolov8s-rfca-spsa.yaml' will call yolov8-rfca-spsa.yaml with scale 's'
+  # [depth, width, max_channels]
+  n: [0.33, 0.25, 1024]
+  s: [0.33, 0.50, 1024]
+  m: [0.67, 0.75, 768]
+  l: [1.00, 1.00, 512]
+  x: [1.00, 1.25, 512]
+
+# YOLOv8 backbone with RFCAConv feature extraction and C2fSPSA attention fusion
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, Conv, [64, 3, 2]] # 0-P1/2
+  - [-1, 1, Conv, [128, 3, 2]] # 1-P2/4
+  - [-1, 3, C2fSPSA, [128, True]]
+  - [-1, 1, RFCAConv, [256, 3, 2]] # 3-P3/8
+  - [-1, 6, C2fSPSA, [256, True]]
+  - [-1, 1, RFCAConv, [512, 3, 2]] # 5-P4/16
+  - [-1, 6, C2fSPSA, [512, True]]
+  - [-1, 1, RFCAConv, [1024, 3, 2]] # 7-P5/32
+  - [-1, 3, C2fSPSA, [1024, True]]
+  - [-1, 1, SPPF, [1024, 5]] # 9
+
+# YOLOv8 head with C2fSPSA feature refinement
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 6], 1, Concat, [1]] # cat backbone P4
+  - [-1, 3, C2fSPSA, [512]] # 12
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 4], 1, Concat, [1]] # cat backbone P3
+  - [-1, 3, C2fSPSA, [256]] # 15 (P3/8-small)
+
+  - [-1, 1, Conv, [256, 3, 2]]
+  - [[-1, 12], 1, Concat, [1]] # cat head P4
+  - [-1, 3, C2fSPSA, [512]] # 18 (P4/16-medium)
+
+  - [-1, 1, Conv, [512, 3, 2]]
+  - [[-1, 9], 1, Concat, [1]] # cat head P5
+  - [-1, 3, C2fSPSA, [1024]] # 21 (P5/32-large)
+
+  - [[15, 18, 21], 1, Detect, [nc]] # Detect(P3, P4, P5)

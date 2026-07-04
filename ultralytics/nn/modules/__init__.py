@@ -41,6 +41,7 @@ from .block import (
     C2fAttn,
     C2fCIB,
     C2fPSA,
+    C2fSPSA,
     C3Ghost,
     C3k2,
     C3x,
@@ -58,6 +59,7 @@ from .block import (
     RepVGGDW,
     ResNetLayer,
     SCDown,
+    SPSA,
     TorchVision,
 )
 from .conv import (
@@ -73,6 +75,7 @@ from .conv import (
     GhostConv,
     Index,
     LightConv,
+    RFCAConv,
     RepConv,
     SpatialAttention,
 )
@@ -136,6 +139,7 @@ __all__ = (
     "C2fAttn",
     "C2fCIB",
     "C2fPSA",
+    "C2fSPSA",
     "C3Ghost",
     "C3k2",
     "C3x",
@@ -169,6 +173,7 @@ __all__ = (
     "Pose",
     "Pose26",
     "Proto",
+    "RFCAConv",
     "RTDETRDecoder",
     "RepC3",
     "RepConv",
@@ -179,6 +184,7 @@ __all__ = (
     "Segment",
     "Segment26",
     "SemanticSegment",
+    "SPSA",
     "SpatialAttention",
     "TorchVision",
     "TransformerBlock",

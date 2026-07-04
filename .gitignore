@@ -152,6 +152,13 @@ dmypy.json
 runs/
 wandb/
 .DS_Store
+*.zip
+*.tar
+*.tar.gz
+*.rar
+/YOLO_PID_runs*/
+/pid*/
+/rdd2022_india*/
 
 # Neural Network weights -----------------------------------------------------------------------------------------------
 weights/

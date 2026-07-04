@@ -8,6 +8,7 @@ import math
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 __all__ = (
     "CBAM",
@@ -22,6 +23,7 @@ __all__ = (
     "GhostConv",
     "Index",
     "LightConv",
+    "RFCAConv",
     "RepConv",
     "SpatialAttention",
 )
@@ -639,6 +641,46 @@ class Concat(nn.Module):
             (torch.Tensor): Concatenated tensor.
         """
         return torch.cat(x, self.d)
+
+
+class RFCAConv(nn.Module):
+    """Recalibrated feature convolution with coordinate, channel, and spatial attention."""
+
+    def __init__(self, c1, c2, k=3, s=1, p=None, g=1, d=1, act=True, reduction=16):
+        """Initialize RFCAConv for attention-guided road-defect feature extraction."""
+        super().__init__()
+        c_ = max(8, c2 // reduction)
+        self.conv = Conv(c1, c2, k, s, p, g, d, act)
+        self.coord_conv = nn.Conv2d(c2, c_, 1, bias=False)
+        self.coord_bn = nn.BatchNorm2d(c_)
+        self.coord_act = nn.SiLU()
+        self.coord_h = nn.Conv2d(c_, c2, 1, bias=False)
+        self.coord_w = nn.Conv2d(c_, c2, 1, bias=False)
+        self.channel = nn.Sequential(
+            nn.AdaptiveAvgPool2d(1),
+            nn.Conv2d(c2, c_, 1, bias=False),
+            nn.SiLU(),
+            nn.Conv2d(c_, c2, 1, bias=False),
+            nn.Sigmoid(),
+        )
+        self.spatial = nn.Sequential(nn.Conv2d(2, 1, 7, padding=3, bias=False), nn.Sigmoid())
+        self.fuse = Conv(c2 * 2, c2, 1, 1, act=act)
+
+    def forward(self, x):
+        """Apply RFCA feature recalibration and fusion."""
+        y = self.conv(x)
+        _, _, h, w = y.shape
+
+        y_h = F.adaptive_avg_pool2d(y, (h, 1))
+        y_w = F.adaptive_avg_pool2d(y, (1, w)).transpose(2, 3)
+        coord = self.coord_act(self.coord_bn(self.coord_conv(torch.cat((y_h, y_w), 2))))
+        a_h, a_w = coord.split((h, w), 2)
+        coord_weight = self.coord_h(a_h).sigmoid() * self.coord_w(a_w.transpose(2, 3)).sigmoid()
+
+        channel_weight = self.channel(y)
+        spatial_weight = self.spatial(torch.cat((y.mean(1, keepdim=True), y.max(1, keepdim=True)[0]), 1))
+        enhanced = y * coord_weight * channel_weight * spatial_weight
+        return self.fuse(torch.cat((y, enhanced), 1))
 
 
 class Index(nn.Module):
