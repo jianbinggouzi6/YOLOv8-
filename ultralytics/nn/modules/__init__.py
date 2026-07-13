@@ -30,6 +30,7 @@ from .block import (
     SPP,
     SPPELAN,
     SPPF,
+    SPSA,
     A2C2f,
     AConv,
     ADown,
@@ -59,7 +60,6 @@ from .block import (
     RepVGGDW,
     ResNetLayer,
     SCDown,
-    SPSA,
     TorchVision,
 )
 from .conv import (
@@ -75,8 +75,8 @@ from .conv import (
     GhostConv,
     Index,
     LightConv,
-    RFCAConv,
     RepConv,
+    RFCAConv,
     SpatialAttention,
 )
 from .head import (
@@ -128,6 +128,7 @@ __all__ = (
     "SPP",
     "SPPELAN",
     "SPPF",
+    "SPSA",
     "A2C2f",
     "AConv",
     "ADown",
@@ -184,7 +185,6 @@ __all__ = (
     "Segment",
     "Segment26",
     "SemanticSegment",
-    "SPSA",
     "SpatialAttention",
     "TorchVision",
     "TransformerBlock",
