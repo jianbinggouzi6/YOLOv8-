@@ -25,6 +25,7 @@ __all__ = (
     "SPP",
     "SPPELAN",
     "SPPF",
+    "SPSA",
     "AConv",
     "ADown",
     "Attention",
@@ -52,7 +53,6 @@ __all__ = (
     "RepVGGDW",
     "ResNetLayer",
     "SCDown",
-    "SPSA",
     "TorchVision",
 )
 
