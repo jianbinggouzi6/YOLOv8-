@@ -4,8 +4,8 @@
 from __future__ import annotations
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 
 from ultralytics.utils.torch_utils import fuse_conv_and_bn
 
@@ -25,6 +25,7 @@ __all__ = (
     "SPP",
     "SPPELAN",
     "SPPF",
+    "SPSA",
     "AConv",
     "ADown",
     "Attention",
@@ -52,7 +53,6 @@ __all__ = (
     "RepVGGDW",
     "ResNetLayer",
     "SCDown",
-    "SPSA",
     "TorchVision",
 )
 

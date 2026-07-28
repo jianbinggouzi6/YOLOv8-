@@ -8,7 +8,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 from ultralytics.nn.autobackend import check_class_names
 from ultralytics.nn.modules import (
@@ -58,12 +58,12 @@ from ultralytics.nn.modules import (
     LRPCHead,
     Pose,
     Pose26,
-    RFCAConv,
     RepC3,
     RepConv,
     RepNCSPELAN4,
     RepVGGDW,
     ResNetLayer,
+    RFCAConv,
     RTDETRDecoder,
     SCDown,
     Segment,
